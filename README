@@ -1,0 +1,6 @@
+This repo is for tracking the progress of development of device drviers on beagle bone black.
+Current goals:
+1. Setup the router for assigning a static ip to the board sot that it can be configured from any where in the world.
+2. Create a script and cron job which will peridically check if the public ip is changed or not. If it is changed then it will send a mail to raymogg account.
+3. Build tty driver on the board and check its functionality.
+4. Build usb-serial driver on the board and check its functionality.
