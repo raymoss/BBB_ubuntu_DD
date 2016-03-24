@@ -4,3 +4,12 @@ Current goals:
 2. Create a script and cron job which will peridically check if the public ip is changed or not. If it is changed then it will send a mail to raymogg account.
 3. Build tty driver on the board and check its functionality.
 4. Build usb-serial driver on the board and check its functionality.
+
+Status(24/03/2016):
+1. Installed latest image on the BBB. Refer site http://elinux.org/BeagleBoardUbuntu#Method_1:_Download_a_Complete_Pre-Configured_Image
+2. Installed vim ,ssmtp and git inside the board.
+3. Need to edit ssmtp config file in /etc/ssmtp/ssmtp.conf for setting up the system.
+4. Set cronjob for sending the change in public ip to raymogg. Command used crontab -e . Inside that file add file name.
+5. Currently installed cross compiler for arm system for this site https://eewiki.net/display/linuxonarm/BeagleBone+Black#BeagleBoneBlack-ARMCrossCompiler:GCC
+6. Exported variable CC with the location as mentioned in line 3.
+
