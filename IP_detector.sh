@@ -1,6 +1,6 @@
 #!/bin/sh
 PATH=$PATH:/usr/bin:/bin:/sbin:/usr/sbin
-FILE_FOLDER=/home/ubuntu/github/BBB_ubuntu_DD
+FILE_FOLDER=/tmp
 NEW_IP=$( wget http://ipinfo.io/ip -qO - )
 if [ -f "$FILE_FOLDER/ip_log.txt" ]
 then
