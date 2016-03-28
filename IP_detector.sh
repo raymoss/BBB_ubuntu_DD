@@ -2,7 +2,7 @@
 PATH=$PATH:/usr/bin:/bin:/sbin:/usr/sbin
 FILE_FOLDER=/tmp
 NEW_IP=$( wget http://ipinfo.io/ip -qO - )
-if [ $NEW_IP = "" ]
+if [ -z "$NEW_IP"  ]
 then 
 	logger "GET_IP: IP is blank , need to do it again after some time ..."
 	exit 0
