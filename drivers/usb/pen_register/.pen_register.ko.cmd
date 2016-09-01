@@ -1,0 +1,1 @@
+cmd_/home/ray/drivers/usb/pen_register/pen_register.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/ray/drivers/usb/pen_register/pen_register.ko /home/ray/drivers/usb/pen_register/pen_register.o /home/ray/drivers/usb/pen_register/pen_register.mod.o

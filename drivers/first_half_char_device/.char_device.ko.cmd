@@ -1,0 +1,1 @@
+cmd_/home/ray/drivers/first_half_char_device/char_device.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/ray/drivers/first_half_char_device/char_device.ko /home/ray/drivers/first_half_char_device/char_device.o /home/ray/drivers/first_half_char_device/char_device.mod.o

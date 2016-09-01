@@ -1,0 +1,8 @@
+How to check driver loaded for usb devices:
+1. check the dmesg for the bus where the device is connected.
+2. Go to /sys/bus/ the bus id from the dmesg .
+3. Now the endpoint 0 is present in 1-0 etc. For storage interfaces , nomenclature would be 1-0:1.0 . After colon , another end point would be mentioned.
+4. For checking the driver loaded for a device, check the modealisis field in the above mentioned directory and go to /lib/modules/module.alais .
+5. Cat the file and search for interface class(ic),interface subclass(isc),
+etc.
+

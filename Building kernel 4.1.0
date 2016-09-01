@@ -1,0 +1,30 @@
+Things i did in 2 weekends:
+1. Install the latest kernel from linux torvald github. 4.1.0 
+2 methods ,first using github :- git clone -b v4.1 https://github.com/torvalds/linux.git
+2nd methods download from zip file.
+
+3. Apply patch from this site https://rcn-ee.com/deb/xenial-armhf/v4.1.18-ti-r52/ command patch -p1 < patch......file
+
+4.  make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- BBB_defconfig 
+Copy BBB_defconfig to this location arch/arm/configs/ which in turn is copied from https://rcn-ee.com/deb/xenial-armhf/v4.1.18-ti-r52/
+
+5. make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- uImage dtbs LOADADDR=0x80008000 -j4
+
+After compiling you can find the image files in “arch/arm/boot/” directory. Copy “uImage” file from this directory and also “am335x-boneblack.dtb” file from “arch/arm/boot/dts/” directory to the BOOT partition.
+
+6. sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j4 modules
+   sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=/media/mani/RFS/ modules_install
+ 
+7. Copy uEnv.txt,MLO from boot and copy it boot partition of sdcard.
+
+https://eewiki.net/display/linuxonarm/BeagleBone#BeagleBone-InstallKernelandRootFileSystem
+
+http://embedjournal.com/kernel-compilation-beaglebone-black/
+
+8.After this unsuccessfull attempts i started with the steps at https://eewiki.net/display/linuxonarm/BeagleBone#BeagleBone and got a working kernel.
+9. For filesystem i used the one at rcenet ftp and extracted the image using kpartx command. 
+10. later there was an issue of preserving the links of the files.
+ this got resolved using cp -P -r ... command.
+11. Next there was an issue with sudo permission. I mounted the filesystem again and directly editted the permission of the file.
+
+

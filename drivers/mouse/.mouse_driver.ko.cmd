@@ -1,0 +1,1 @@
+cmd_/home/ray/Dropbox/drivers/mouse/mouse_driver.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/ray/Dropbox/drivers/mouse/mouse_driver.ko /home/ray/Dropbox/drivers/mouse/mouse_driver.o /home/ray/Dropbox/drivers/mouse/mouse_driver.mod.o

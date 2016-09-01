@@ -1,0 +1,156 @@
+For installing linux kernel on the system:
+We used uname -r to get the kernel version. Then installed linux source from launchpad site and then patched the source with 4.2.0-22 source.
+Website for the same: https://launchpad.net/ubuntu/+source/linux/4.2.0-22.27 
+
+
+
+
+Hey moss, back again after losing so much of data!
+Yesterday we talked about the policy and the functionality which a device driver needs to implement . Policy part is mostly handled by the end application whereas the functionality part is the responsibility of the driver. Sometimes there would be combination of both.
+Next we talked about the classes of device driver:
+1. Char devices: This class of devices make use of byte streams of data for sending and recieving the data. Eg of this class includes devices such as tty and console.
+2. Block devices: This class of devices transfers block of data. Mostly it is of 512 bytes but there could be a possibility of bytes in higher power of 2. We can use byte stream as well to write or read from the device, thus making it similar to that of char device. The only difference could be the underlyning principle of handling the device. 
+3. Network devices: These devices handle the networking stack of the system. This is the only class which does not have file name associated with them. The use names such as eth0 to refer the device. Most of the devices are hardware but there are some software devices as well such as loopback driver which points to itself.
+
+Apart from driver handling the hardware and implementing the functionalities for the hardware, device driver sometimes implement the policy in the form software drivers. Eg of such driver is present in filesystem. 
+
+Enough of babbling, lets move on to chap 2 for the actual programming section.
+
+The chap starts with an hello world example. The complicated part is the text is not clear enough. So first we need to configure and install the same kernel source on the system which we are using. USe `uname -r` to get the kernel version of the system which we are using. Then we need to install the kernel . It might take some time. Enjoy some coffee.
+
+Okay, the kernel is ready for building the first module. The module has an init and exit function which gets called after inserting and removing module. 
+????????? Why dmesg is not getting updated at each step?
+We also saw printk statement which is used for printing the kernel messages in the dmesg . There are various levels of kernel messages. The print which we are using is "KERNEL ALERT" which is of highest level.
+
+Userspace and kernel space:
+The book reiterates the concept of userspace and kernel space. It defines the function of the OS to provide the protection of resources from unauthorized use . This is acheived by taking the advantage of hardware levels. The kernel runs in highest level which the user application may run on any of the lower levels.(Obviously,If there are more than 2 levels ). Kernel module also as the same privilage level as that of the kernel.
+
+Concurreny in the kernel:
+The most deadliest topics. We need to make code reenterant and thus it is important to understand the topic of concurreny. We are handling the concept in chap 5.
+
+Current process:
+The kernel task are called from the userspace. For getting the reference of the process which called the kernel, we can use global item current which works as a pointer to struct task_struct which is the structure for the current task.
+The following example illustrate the functionality of the current pointer:
+printk(KERN_INFO"The process is %s (%d)",current->comm,current->pid);
+
+Few things to remember:
+The kernel have very limited stack space. We need to define the structures dynamically. In the kernel API, some of the functions are represented by "__" at there start. This is machine dependent code and needs to be handled with care. Also it is difficult to perform floating point operations on the kernel space. The reason for this is that we need to save the current context of floating point unit and then perform the operation. 
+
+Compiling modules:
+**Look into Documentation/kbuild to understand the build process of the kernel modules.
+We are back. Now for generating the modules from the object file , we take advantage of the extended version of GNU make. For defining the object file , we use  obj-m := hello.o
+For generating a module consisting of multiple object files, we use following:
+ obj-m := module.o
+ module-objs := file1.o file2.o
+
+For complete make file refer to pg 42.
+
+The module building process happens in two stages. In first stage it gets the kernel build directory and links it with the source files. If the build version is different than currently running on the system, we can set the KERNELDIR environment variable to point to kernel build tree. After that, make file calls the makefile of the kernel build which handles the task of generating the modules. This comprises of the 2nd stage.
+
+Loading modules:
+Next section is about loading modules. insmod is used for loading modules on the kernel. It basically behaves similar to the linker which resolves the unresolved sysmbols of kernel. The basic difference is that a linker just changes the code while the insmod make changes in the in-memory copy of the module. Also there are some load time configurations sets the parameters for the module. It gives the user the flexibility to set the parameters at load time instead of compile time.
+More info is provided in kernel/module.c file. It first calls the sys_init_module which allocates kernel memory to the module using valloc . Then it resolves the unresolved symbols and then calls the init function.
+
+The difference between modprobe and the insmod is that the modprobe resolves the unresolved symbols by using the other kernel modules. If the symbol remains unresolved then it will write in the logfile.
+lsmod lists the modules loaded by the kernel. It uses the proc/modules virtual file to get the data . /sys/modules also give same data.
+
+vermagic.o file consist of all the information regarding the target kernel , configuration, compiler version etc. Whenever a module is build, it links with this file . Whenever a module is inserted, this file can be checked for compatibility issues.
+
+Kernel symbol table:
+It is the table where the kernel keeps track of the functions and variables with their address so that it could be used by other modules. This process is called module stacking. 
+EXPORT_SYMBOL(name) 
+EXPORT_SYMBOL_GPL(name)
+Above macros can be used for exporting the symbols. THe macro with GPL is used for modules under the GPL license. Also the symbols need to be defined in global part of the module file since these symbols are stored in the special section of the module known as ELF section so that kernel can use them at load time.
+
+Ok guys, we are back. We are starting with Initialization and shutdown function in kernel modules. We use __init and _initdata tokens to tell the kernel that the given function or data is used only during initialisation process. After the initialisation is done, the kernel can drop this memory and make it to other use.
+Most kernel registration function is prefixed by register_ . 
+
+Error handling in initialisation :
+Need to check return code after every execution. Try to manage to register even if its with degraded functionality. IF at some point it becomes impossible, then we need to unregister the complete process. Failing to unregister will make the kernel unstable.
+
+Error codes in linux are negative nos defined in linux/errno.h .
+For making ones own error code, we can define it in linux/errno.h see pg 52.
+For passing the parameters to the module module_param(variable, type, permission) is used .The various types of parameters supported by the macro is provided on pg 54.
+For userdefined variables, see file moduleparam.h . All variables should be given default value.
+The permission value is defined in linux/stat.h S_IRGO for readonly and S_IRGO | S_IWUSR for read write permission.
+The changes are not reflected in the module directly. The module should be made such that it takes into account the changes done to it.
+ 
+Char device:
+
+We are starting with a new chapter today . We are going to prepare a char device known as skull. 
+We are going to implement skull0 to skull3. It will be global and persistent. Global means the device would be shared by all the instances of it . Persistence means if device is closed and reopend , we dont loose data.
+scullpipe0 to skullpipe3 which are fifo devices. 
+
+Major and minor numbers:
+The major number defines the driver number being used for particular device.Minor number is used for referencing the devices from the kernel.
+dev_t is used for storing the major and minor numbers. eg
+MAJOR(dev_t dev) and MINOR(dev_t dev) is used for getting major and minor nos.
+For getting a dev_t from major and minor nos, we use MKDEV(int major , int minor);
+
+Hey guys, long time no see. Today we are talking about the allocation of device numbers. There are two ways to assign a major number to yr driver. First is defining a number statically or request for dynamic number from the linux kernel. Documentation/devices contains the major numbers already allocated to some common drivers. u can find the major numbers assigned by looking at proc/devices file. For static allocation of major number register_chrdev_region function is used. Similarly for dynamic allocation , we use alloc_chrdev_region is used.
+
+I am not sure why the writer started the topic about device major number before going to why it is required :P For driver development there are some task needs to be performed . First is allocation of major number . Other fundamental task include file_operations, filea and inode. As we have already looked into major numbers , we will move forward for other components.
+
+File operations: 
+We need to associate the file operation with the driver. The structure for file operation is defined in linux/fs.h . 
+The following are the list of operations which are used commonly. refer pg 68
+The list is enormous . We got to know about asynchronous read and write operation. Everything is used as pointer . Also we learned about tagged initialisation in structures. Please refer to following link http://stackoverflow.com/questions/3016107/what-is-tagged-structure-initialization-syntax/3017026#3017026?newreg=741370761f8f4f2484b96919711716bc 
+
+Inode:
+Hey guys, last day of the year. It also went like anyother year but had some downs . Its ok but still there is some space left in the heart. Anyways, lets start with the device drivers.
+In this section , we are going to talk about inode. Inode is the structure which represents a file. It has following metadata about file apart from actual file name. A direcory is the collection of inodes and filenames. Inodes does not contain the filename because a soft link can access the same file but the name of soft link would be different.
+Comming back to the functionalities of device driver, we are looking at the use of inodes from device driver point of view. 
+dev_t i_rdev gives the device number. I still dont get the use of it . Lets revisit it after examples. 
+Next is the char device registration. We need to allocate a cdev structure for our device driver. These are the steps for the same.
+struct cdev *cdev = cdev_alloc();
+cdev->ops = &my_fops;
+After setting up the cdev structure , next step is to tell the kernel about it.
+int cdev_add(struct cdev *dev, dev_ num, unsigned int count);
+After cdev_add function call the device becomes live. So initialise everything before calling the cdev_add function.
+
+Device Registration in scull:
+Now we are going to look at an actual char driver.
+First define a structure for yr driver. Here we are calling it skull_dev. Inside skull_dev there are various fields. Currently we consider only cdev. For initialising the cdev structure , we use the funtion skull_setup_cdev.
+Inside skull_setup_cdev we create the major and minor numbers. 
+??????????? devno is not defined . Not sure where is the initialisation taking place.
+cdev_init to initialize the structure. 
+
+Following is the snippet of the code.
+int err, devno = MKDEV(scull_major, scull_minor + index);
+cdev_init(&dev->cdev, &scull_fops);
+dev->cdev.owner = THIS_MODULE;
+dev->cdev.ops = &scull_fops;
+err = cdev_add (&dev->cdev, devno, 1);
+/* Fail gracefully if need be */
+if (err)
+printk(KERN_NOTICE "Error %d adding scull%d", err, index);
+
+
+Hello all, i am back. There has been a pause on LDD3 but we are still in device drivers world. I started with tutorials to look for real time examples and speed up my pace of learning with practical examples. First we created our first driver with init and exit functions only. Next we moved on to char devices . IN char device , we made functions such as open, close , read , write. Next we associated those fucntions with fops. Then in initialization section , we created class of drvier, create device, cdev_init and then assciated cdev structure.
+Next we added some functionality in write and read funtions so that we can use simple commands like echo hello > /dev/mynull and cat /dev/mynull. So in the example we initialized a global variable of char type. Then in read funciton, we used functions such as copy_from_user to transfer the user space buffer to drvier space. Similarly for write funciton we used fucntion copy_to_user to transfre to user-space. Next while reading from device, we observed that when returned 1 there was a recursive read happening. Because of that there was an infinite number of character on the shell. To overcome this shortcommings we used the off parameter in read function. It is basically a pointer to the location of current location in file. It return true if there is a character else return a false if pointing to end of file. 
+
+Ok, enough of summary. Let move on to actual video ram driver.
+All the hardware in linux are mapped into ram . We can observe the same using cat /proc/iomem . Here you will see all the memory mapped busses in linux. Similarly , using command cat /proc/meminfo we get info regarding the size of ram.
+
+
+All devices in linux are mapped with virtual address. Thus to associate a virtual address to physical device we use funtion ioremap. For unmapping, iounmap is used which are defined in asm/io.h . After the devices are mapped , we can use the offset to read from memory or write to them. ioread8 and iowrite8 are example of funtion used to read and write 8 bit data to devices. Similarly funtions are available for 16,32 bit read/write operation.
+
+hello guys. There has been a long pause because of some health issues. Lets get started with new topic today i.e. ioctl. ioctl is one function fits all. In this, any funtionality can be implemented. For example, using the cmd argument, any type of funtion can be called. Inside the ioctl, there would be switch case loop which will call appropiate function on the basis of the cmd passed. ioctl also has a system call which can be used to invoke driver from user-space. Lets implement it.
+Lets discuss the implementation flow. First we need to create a driver. All the funtions are similar to that we used for char driver but the only difference is that it would include ioctl function. In ioctl , we will define 3 cmds such as set,clr and get. Next to use this driver we need to create an app. We create an app in which we pass commands as arguments to get particular functionality of ioctl driver. Inside the app, we are using ioctl syscall to call the corresponding funtions of driver.
+
+Now we move on to actual device known as the USB :) The usb layer is divided into 3 sections i.e.usb core, usb device drivers and usb host cotroller drivers. refer usb_info file for checking how to check drvier for particular device. Any usb device can have multiple interfaces and each interface can have only one driver. An interface can have multiple endpoints. Each interface must have endpoint0  which is basically used for control. It is only bidirectional endpoint in the device.
+
+The endpoints are divided into 4 categories:
+1. Control endpoint: In control endpoint, we transfer control information such as resetting the device , information about the device etc.
+2. Interrupt endpoint: This is used for small and fast data transfers such as keyboard, mouse etc.
+3. Bulk endpoint: It is used for transfer of big but slower data transfers such as mass storage devices.
+4. Isochronous endpoint: for big data transfer such as real time transfer of video, audio etc
+
+Each endpoint is represented by 8 bit address. The most significant bit denotes the direction. 1 means in and 0 means out. Next all the structures used for usb are present in linux/usb.h . First we created a probe function and disconnect funtion. It is related to hot plugging functionality. Next there is usb_device_id which is used for mapping the devices which would be associated with this driver. Then we have init and exit funtion which registers the driver with the hardware.
+?????? Following things are still not clear, what is probe and why it is used.
+Probe function is called when driver is registered with the device. whereas init is used when drvier is loaded. 
+	Why mass-storage module is loaded for the device?Is it loaded for endpoint 0? But if its loaded for end point 1 then why it is not able to display the content of mass storage? What is this uas?
+uAS is usb attached scsi. It is used for transfer of data from usb storage devices. It provides faster transfer as compared to BOT drviers.
+
+Basically we can make out that above usb-storage , there is another driver which handles the transfer of data.
+	 

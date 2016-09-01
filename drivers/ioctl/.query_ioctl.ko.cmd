@@ -1,0 +1,1 @@
+cmd_/home/ray/drivers/ioctl/query_ioctl.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/ray/drivers/ioctl/query_ioctl.ko /home/ray/drivers/ioctl/query_ioctl.o /home/ray/drivers/ioctl/query_ioctl.mod.o
